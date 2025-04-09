@@ -177,6 +177,6 @@ ideas-and-todos
 temp.ipynb
 
 # Large raw data files
-data/raw
+data/raw/*.csv
 
 **/.DS_Store

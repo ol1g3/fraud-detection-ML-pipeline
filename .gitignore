@@ -180,3 +180,5 @@ testing.ipynb
 data/raw/*.csv
 
 **/.DS_Store
+
+logs

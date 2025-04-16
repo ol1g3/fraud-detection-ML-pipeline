@@ -49,8 +49,6 @@ class DataLoader:
         self,
         filename: str,
         test_filename: str,
-        sample_frac: float,
-        random_state: int = 42,
     ) -> None:
         """
         Load the main dataset.
@@ -58,29 +56,22 @@ class DataLoader:
         Args:
             filename: Name of the training file
             test_filename: Name of the test file (if separate)
-            sample_frac: Fraction of data to sample
-            random_state: Random state for reproducibility
 
+        Returns:
+            None
         """
-        self.train_data = self.load_csv(filename, sample_frac, random_state)
-        self.test_data = self.load_csv(test_filename, sample_frac, random_state)
+        self.train_data = self.load_csv(filename)
+        self.test_data = self.load_csv(test_filename)
 
     def train_valid_split(
-        self,
-        df: pd.DataFrame,
-        valid_size: float = 0.15,
-        random_state: int = 42,
+        self, valid_size: float = 0.15
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Split dataset into train, validation, and test sets.
 
         Args:
             df: DataFrame to split
-            target_column: Name of the target column for stratification
-            train_size: Fraction of data for training
             valid_size: Fraction of data for validation
-            random_state: Random state for reproducibility
-            stratify: Whether to use stratified splits
 
         Returns:
             tuple of (train, validation, test) DataFrames
@@ -89,25 +80,21 @@ class DataLoader:
         valid_df, test_df = train_test_split(
             self.test_data,
             test_size=valid_size,
-            random_state=random_state,
+            random_state=42,
         )
 
         self.valid_data = valid_df
         self.test_data = test_df
 
-        return self.train_df, valid_df, test_df
+        return self.train_data, valid_df, test_df
 
-    def get_batch(
-        self, dataset: str = "train", batch_size: int = 32, random_state: int = 42
-    ) -> pd.DataFrame:
+    def get_batch(self, dataset: str, batch_size: int = 32) -> pd.DataFrame:
         """
         Get a batch of data for training or evaluation.
 
         Args:
             dataset: Which dataset to use ('train', 'valid', 'test')
             batch_size: Size of the batch
-            shuffle: Whether to shuffle the data
-            random_state: Random state for reproducibility
 
         Returns:
             Batch as DataFrame
@@ -121,16 +108,14 @@ class DataLoader:
         else:
             raise ValueError(f"Dataset '{dataset}' not loaded or not recognized")
 
-        batch = data.sample(n=min(batch_size, len(data)), random_state=random_state)
+        batch = data.sample(n=min(batch_size, len(data)), random_state=42)
 
         return batch
 
     def batch_generator(
         self,
-        dataset: str = "train",
+        dataset: str,
         batch_size: int = 32,
-        shuffle: bool = True,
-        random_state: int = 42,
     ) -> pd.DataFrame:
         """
         Generate batches of data for training or evaluation.
@@ -138,8 +123,6 @@ class DataLoader:
         Args:
             dataset: Which dataset to use ('train', 'valid', 'test')
             batch_size: Size of the batch
-            shuffle: Whether to shuffle the data
-            random_state: Random state for reproducibility
 
         Yields:
             Batches of data as DataFrames
@@ -155,9 +138,8 @@ class DataLoader:
 
         indices = np.arange(len(data))
 
-        if shuffle:
-            np.random.seed(random_state)
-            np.random.shuffle(indices)
+        # Shuffle indices for randomness
+        np.random.shuffle(indices)
 
         for start_idx in range(0, len(data), batch_size):
             end_idx = min(start_idx + batch_size, len(data))

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from typing import List, Optional
+from sklearn.preprocessing import StandardScaler, OrdinalEncoder
+from typing import Optional
 
 
 class DataPreprocessor:
@@ -18,11 +18,11 @@ class DataPreprocessor:
 
     def __init__(
         self,
-        categorical_features: List[str] = None,
-        numerical_features: List[str] = None,
-        target_column: str = None,
-        datetime_features: List[str] = None,
-        drop_columns: List[str] = None,
+        categorical_features: list[str] = [],
+        numerical_features: list[str] = [],
+        target_column: str = "",
+        datetime_features: list[str] = [],
+        drop_columns: list[str] = [],
     ):
         """
         Initialize the DataPreprocessor.
@@ -34,18 +34,17 @@ class DataPreprocessor:
             datetime_features: List of datetime feature columns
             drop_columns: List of columns to drop during preprocessing
         """
-        self.categorical_features = categorical_features or []
-        self.numerical_features = numerical_features or []
-        self.target_column = target_column or ""
-        self.datetime_features = datetime_features or ["TransactionDate"]
-        self.drop_columns = drop_columns or []
+        self.categorical_features = categorical_features
+        self.numerical_features = numerical_features
+        self.target_column = target_column
+        self.datetime_features = datetime_features
+        self.drop_columns = drop_columns
 
         # Preprocessing objects
         self.scaler = StandardScaler()
-        self.encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+        self.encoder = OrdinalEncoder()
         self.fitted = False
 
-        # Store column info
         self.encoded_feature_names = []
 
     def _handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -93,7 +92,7 @@ class DataPreprocessor:
                 df[f"{col}_month"] = df[col].dt.month
                 df[f"{col}_year"] = df[col].dt.year
 
-                # Time-based features
+                # Weekend indicator
                 df[f"{col}_is_weekend"] = df[col].dt.dayofweek >= 5
 
         return df
@@ -150,31 +149,14 @@ class DataPreprocessor:
         # Engineer features
         df_copy = self._engineer_features(df_copy)
 
-        # Identify features if not specified
-        if not self.categorical_features and not self.numerical_features:
-            self.categorical_features = df_copy.select_dtypes(
-                include=["object", "category"]
-            ).columns.tolist()
-            self.numerical_features = df_copy.select_dtypes(
-                include=["int64", "float64"]
-            ).columns.tolist()
-
-            # Remove target from feature lists
-            if self.target_column in self.categorical_features:
-                self.categorical_features.remove(self.target_column)
-            if self.target_column in self.numerical_features:
-                self.numerical_features.remove(self.target_column)
-
         # Fit encoder on categorical features
-        if self.categorical_features:
-            self.encoder.fit(df_copy[self.categorical_features])
-            self.encoded_feature_names = self.encoder.get_feature_names_out(
-                self.categorical_features
-            ).tolist()
+        self.encoder.fit(df_copy[self.categorical_features])
+        self.encoded_feature_names = self.encoder.get_feature_names_out(
+            self.categorical_features
+        ).tolist()
 
         # Fit scaler on numerical features
-        if self.numerical_features:
-            self.scaler.fit(df_copy[self.numerical_features])
+        self.scaler.fit(df_copy[self.numerical_features])
 
         self.fitted = True
         return self
@@ -203,10 +185,8 @@ class DataPreprocessor:
         # Engineer features
         df_copy = self._engineer_features(df_copy)
 
-        # Extract target if present
-        y = None
-        if self.target_column in df_copy.columns:
-            y = df_copy[self.target_column].values
+        # Extract target variable
+        y = df_copy[self.target_column].values
 
         # Drop unnecessary columns
         for col in self.drop_columns + self.datetime_features:
@@ -215,23 +195,16 @@ class DataPreprocessor:
 
         # Transform categorical features
         X_categorical = None
-        if self.categorical_features:
-            cat_cols = [
-                col for col in self.categorical_features if col in df_copy.columns
-            ]
-            if cat_cols:
-                X_categorical = self.encoder.transform(df_copy[cat_cols])
+        cat_cols = [col for col in self.categorical_features if col in df_copy.columns]
+        if cat_cols:
+            X_categorical = self.encoder.transform(df_copy[cat_cols])
 
         # Transform numerical features
         X_numerical = None
-        if self.numerical_features:
-            num_cols = [
-                col for col in self.numerical_features if col in df_copy.columns
-            ]
-            if num_cols:
-                X_numerical = self.scaler.transform(df_copy[num_cols])
+        num_cols = [col for col in self.numerical_features if col in df_copy.columns]
+        if num_cols:
+            X_numerical = self.scaler.transform(df_copy[num_cols])
 
-        # Combine features
         X_parts = []
         if X_categorical is not None and X_categorical.size > 0:
             X_parts.append(X_categorical)
@@ -259,7 +232,7 @@ class DataPreprocessor:
         """
         return self.fit(df).transform(df)
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names(self) -> list[str]:
         """
         Get names of transformed features.
 
@@ -273,11 +246,9 @@ class DataPreprocessor:
 
         feature_names = []
 
-        # Add encoded categorical features
         if self.encoded_feature_names:
             feature_names.extend(self.encoded_feature_names)
 
-        # Add numerical features
         feature_names.extend(self.numerical_features)
 
         return feature_names

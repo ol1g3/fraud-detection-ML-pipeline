@@ -7,6 +7,8 @@ from sklearn.metrics import (
     f1_score,
 )
 
+from src.utils.logger import PipelineLogger
+
 
 def truncated_normal(
     mean: float = 0, sd: float = 1, low: float = 0, upp: float = 10
@@ -57,7 +59,11 @@ class FraudDetectionModel:
         self.output_dim = 1
 
         if len(hidden_dims) != 2:
+            self.logger.error(
+                "Expected exactly 2 hidden dimensions, got: %s", hidden_dims
+            )
             raise ValueError("Expected exactly 2 hidden dimensions")
+
         self.hidden_dims = hidden_dims
 
         self.learning_rate = learning_rate
@@ -67,6 +73,8 @@ class FraudDetectionModel:
         self.batch_size = batch_size
 
         self._create_weight_matrices()
+
+        self.logger = PipelineLogger("model", log_file="logs/model.log")
 
     def _create_weight_matrices(self) -> None:
         X = truncated_normal(mean=0, sd=1, low=-0.5, upp=0.5)
@@ -89,6 +97,10 @@ class FraudDetectionModel:
         elif self.activation == "relu":
             return np.maximum(0, x)
         else:
+            self.logger.error(
+                "Unknown activation function: %s. Expected 'sigmoid' or 'relu'.",
+                self.activation,
+            )
             raise ValueError(f"Unknown activation function: {self.activation}")
 
     def _activate_derivative(self, x: np.ndarray) -> np.ndarray:
@@ -98,6 +110,10 @@ class FraudDetectionModel:
         elif self.activation == "relu":
             return np.where(x > 0, 1, 0)
         else:
+            self.logger.error(
+                "Unknown activation function: %s. Expected 'sigmoid' or 'relu'.",
+                self.activation,
+            )
             raise ValueError(f"Unknown activation function: {self.activation}")
 
     def _sigmoid(self, x: np.ndarray) -> np.ndarray:
@@ -209,7 +225,9 @@ class FraudDetectionModel:
                 total_loss += batch_loss
                 n_batches += 1
 
-        return total_loss / max(n_batches, 1)
+        ans = total_loss / max(n_batches, 1)
+        self.logger.info(f"Training step completed. Average loss: {ans:.4f}")
+        return ans
 
     def predict(self, x: np.ndarray) -> float:
         """
@@ -222,7 +240,9 @@ class FraudDetectionModel:
             Probability prediction (0-1)
         """
         if x.ndim != 1:
+            self.logger.error("Input must be a 1D array")
             raise ValueError("Input must be a 1D array")
+
         x = np.array(x, ndmin=2).T
         _, _, _, _, _, output = self._forward(x, training=False)
         return output[0][0]
@@ -252,12 +272,17 @@ class FraudDetectionModel:
                 correct += 1
 
         accuracy = correct / total
-        return {
+        metrics = {
             "accuracy": accuracy,
             "correct": correct,
             "total": total,
             "predictions": predictions,
         }
+
+        self.logger.info(
+            f"Evaluation completed. Accuracy: {accuracy:.4f}, Correct: {correct}, Total: {total}"
+        )
+        return metrics
 
     def find_optimal_threshold(
         self, y_true: np.ndarray, y_scores: np.ndarray, optimize_for: str = "f1"
@@ -290,5 +315,9 @@ class FraudDetectionModel:
 
         optimal_idx = np.argmax(scores)
         optimal_threshold = thresholds[optimal_idx]
+
+        self.logger.info(
+            f"Optimal threshold for {optimize_for}: {optimal_threshold:.4f}"
+        )
 
         return optimal_threshold

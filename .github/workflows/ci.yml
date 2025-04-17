@@ -52,7 +52,6 @@ jobs:
             --select=E9,F63,F7,F82 \
             --output-format=full
   test:
-    name: Run DataLoader & Preprocessor tests
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3

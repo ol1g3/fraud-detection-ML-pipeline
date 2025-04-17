@@ -51,4 +51,4 @@ jobs:
             --exclude=.venv \
             --force-exclude \
             --select=E9,F63,F7,F82 \
-            --format=github
+            --output-format=full

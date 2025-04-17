@@ -72,6 +72,8 @@ jobs:
             pip install -r requirements.txt
 
       - name: Run data loader & preprocessor tests
+        env:
+            PYTHONPATH: ${{ github.workspace }}/src
         run: |
             source .venv/bin/activate
             python tests/test_data_loader.py

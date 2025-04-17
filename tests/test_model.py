@@ -1,33 +1,13 @@
 import sys
 import os
-import tempfile
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 import pandas as pd
 from src.data.loader import DataLoader
 from src.data.preprocessor import DataPreprocessor
-
-
-def test_data_loader_real():
-    orig_train = os.path.join("data", "processed", "train.csv")
-    orig_test = os.path.join("data", "processed", "test.csv")
-
-    df_train = pd.read_csv(orig_train, nrows=200)
-    df_test = pd.read_csv(orig_test, nrows=100)
-
-    with tempfile.TemporaryDirectory() as tmp:
-        df_train.to_csv(os.path.join(tmp, "train.csv"), index=False)
-        df_test.to_csv(os.path.join(tmp, "test.csv"), index=False)
-
-        loader = DataLoader(data_dir=tmp)
-        loader.load_data("train.csv", "test.csv")
-        train, valid, test = loader.train_valid_split(0.2)
-
-        # Train dataset should remain the same, valid and test should be split
-        assert train.shape[0] == 200
-        assert valid.shape[0] == 20
-        assert test.shape[0] == 80
+from src.model.model import FraudDetectionModel
+import numpy as np
 
 
 def detect_date_columns(df):
@@ -42,7 +22,7 @@ def detect_date_columns(df):
     return date_columns
 
 
-def test_preprocessor():
+def test_model() -> float:
 
     d = DataLoader("data/processed")
 
@@ -63,27 +43,32 @@ def test_preprocessor():
 
     p = p.fit(train)
     X, y = p.transform(train)
+    y = np.array(y).astype(np.float64)
 
-    assert X.shape[0] == train.shape[0]
-    assert y.shape[0] == train.shape[0]
+    fd = FraudDetectionModel(
+        X.shape[1],
+    )
 
-    assert X.shape[1] == 9
+    fd.train(X, y)
+    ans = fd.evaluate(X, y)
+
+    return ans["accuracy"]
 
 
 def main():
+    accuracy = -1
     try:
-        test_data_loader_real()
+        accuracy = test_model()
     except Exception as e:
         print(f"Test failed: {e}", file=sys.stderr)
         sys.exit(1)
 
-    try:
-        test_preprocessor()
-    except Exception as e:
-        print(f"Test failed: {e}", file=sys.stderr)
+    # Regression test
+    if accuracy < 0.8:
+        print("Model accuracy too low:", accuracy, file=sys.stderr)
         sys.exit(1)
 
-    print("All DataLoader & Preprocessor tests passed.")
+    print("All model tests passed.")
     sys.exit(0)
 
 

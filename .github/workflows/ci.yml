@@ -52,3 +52,26 @@ jobs:
             --force-exclude \
             --select=E9,F63,F7,F82 \
             --output-format=full
+  test:
+    name: Run DataLoader & Preprocessor tests
+    runs-on: ubuntu-22.04
+    needs: [build, lint]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: 3.11
+            cache: pip
+
+      - name: Install dependencies
+        run: |
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install -r requirements.txt
+
+      - name: Run data loader & preprocessor tests
+        run: |
+            source .venv/bin/activate
+            python tests/test_data_loader.py

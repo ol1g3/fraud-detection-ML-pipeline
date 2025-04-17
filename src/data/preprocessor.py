@@ -65,7 +65,11 @@ class DataPreprocessor:
         # Categorical columns: fill with most frequent value
         for col in self.categorical_features:
             if col in df and df[col].isnull().sum() > 0:
-                df[col] = df[col].fillna(df[col].mode()[0])
+                mode_values = df[col].mode()
+                if not mode_values.empty:
+                    df[col] = df[col].fillna(mode_values[0])
+                else:
+                    df[col] = df[col].fillna("")
 
         return df
 
@@ -216,6 +220,8 @@ class DataPreprocessor:
         else:
             X = np.array([])
 
+        if len(X[0]) > 1:
+            X = X[:, :-1]
         return X, y
 
     def fit_transform(

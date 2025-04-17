@@ -64,14 +64,14 @@ class DataLoader:
         self.test_data = self.load_csv(test_filename)
 
     def train_valid_split(
-        self, valid_size: float = 0.15
+        self, train_size: float = 0.15
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Split dataset into train, validation, and test sets.
 
         Args:
             df: DataFrame to split
-            valid_size: Fraction of data for validation
+            train_size: Fraction of data for test
 
         Returns:
             tuple of (train, validation, test) DataFrames
@@ -79,7 +79,7 @@ class DataLoader:
 
         valid_df, test_df = train_test_split(
             self.test_data,
-            test_size=valid_size,
+            train_size=train_size,
             random_state=42,
         )
 

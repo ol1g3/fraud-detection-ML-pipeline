@@ -2,8 +2,9 @@ import sys
 import os
 import tempfile
 
-import pandas as pd
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
+import pandas as pd
 from src.data.loader import DataLoader
 from src.data.preprocessor import DataPreprocessor
 

@@ -4,8 +4,7 @@ import os
 
 class PipelineLogger(logging.Logger):
     def __init__(self, name, log_file=None, level=logging.INFO):
-        self.logger = logging.getLogger(name)
-        self.logger.setLevel(level)
+        super().__init__(name, level)
 
         # Configure handlers based on parameters
         self._setup_handlers(log_file, level)
@@ -26,6 +25,6 @@ class PipelineLogger(logging.Logger):
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             f_handler.setFormatter(f_format)
-            self.logger.addHandler(f_handler)
+            self.addHandler(f_handler)
 
-        self.logger.addHandler(c_handler)
+        self.addHandler(c_handler)

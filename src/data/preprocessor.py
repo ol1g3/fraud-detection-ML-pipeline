@@ -42,7 +42,9 @@ class DataPreprocessor:
 
         # Preprocessing objects
         self.scaler = StandardScaler()
-        self.encoder = OrdinalEncoder()
+        self.encoder = OrdinalEncoder(
+            handle_unknown="use_encoded_value", unknown_value=-1
+        )
         self.fitted = False
 
         self.encoded_feature_names = []

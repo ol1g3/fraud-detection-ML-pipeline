@@ -8,6 +8,7 @@ from sklearn.metrics import (
 )
 
 from src.utils.logger import PipelineLogger
+import os
 
 
 def truncated_normal(
@@ -74,7 +75,9 @@ class FraudDetectionModel:
 
         self._create_weight_matrices()
 
-        self.logger = PipelineLogger("model", log_file="logs/model.log")
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        log_file_path = os.path.join(project_root, "logs", "fraud_detection.log")
+        self.logger = PipelineLogger("model", log_file=log_file_path)
 
     def _create_weight_matrices(self) -> None:
         X = truncated_normal(mean=0, sd=1, low=-0.5, upp=0.5)

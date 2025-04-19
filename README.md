@@ -1,5 +1,30 @@
 # fraud-detection-ML-pipeline
-Fraud Detection System using Machine Learning, with a complete CI/CT/CD pipeline
+A comprehensive end-to-end machine learning pipeline for credit card fraud detection with high accuracy (~99.6%). This project includes the complete workflow from data exploration to model deployment with an integrated CI/CD pipeline.
+
+## Project Overview
+
+This project implements a machine learning system to detect fraudulent credit card transactions. It uses a custom-built fraud detection model trained on transaction data that includes temporal patterns, merchant information, and customer demographics. 
+
+Key features of this pipeline:
+- **Data preprocessing** with custom transformations for categorical and temporal features
+- **Exploratory data analysis** revealing insights into fraud patterns
+- **Model training and evaluation** with high performance metrics
+- **Complete CI pipeline** for automated testing and deployment
+- **Comprehensive logging system** for tracking model performance and issues
+- **Visualization tools** for understanding model decisions and fraud patterns
+
+
+## Key Insights from Data Analysis
+
+Our exploratory data analysis revealed several important patterns:
+
+1. **Age-Based Vulnerability**: People over 50 years old tend to be more vulnerable to fraud compared to younger age groups.
+
+2. **Temporal Patterns**: Fraud rates vary significantly by hour of day and day of week, with late night - early morning showing higher risk.
+
+3. **Geographic Hotspots**: Large cities like Washington, New York, and Los Angeles have the highest number of fraudulent transactions.
+
+4. **Transaction Categories**: Shopping and groceries are the transaction types showing higher fraud rates than others.
 
 ## Installation
 
@@ -43,6 +68,20 @@ Fraud Detection System using Machine Learning, with a complete CI/CT/CD pipeline
     ```bash
     deactivate
     ```
+
+## Automated CI Pipeline
+
+This project includes a complete CI/CT pipeline that:
+
+- Runs automated tests on every commit, including build, unit tests
+- Validates model performance on test data (integration test)
+- Generates performance reports and logs
+
+## Future improvements
+
+- Implement neural network-based approaches for potentially higher accuracy
+- Add more sophisticated feature engineering based on domain knowledge
+
 
 ## Data Source
 

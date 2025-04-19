@@ -74,7 +74,7 @@ Our exploratory data analysis revealed several important patterns:
 This project includes a complete CI/CT pipeline that:
 
 - Runs automated tests on every commit, including build, unit tests
-- Validates model performance on test data (integration test)
+- Validates model performance on test data (regression test)
 - Generates performance reports and logs
 
 ## Future improvements
